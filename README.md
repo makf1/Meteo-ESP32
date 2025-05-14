@@ -4,9 +4,8 @@
 
 ### Фото инициализации и основного окна дисплея
 ___
-![initDisplay](https://github.com/user-attachments/assets/d14195e3-a724-477a-b1c3-dd18418e60f7)
-
-![mainWindowDisplay](https://github.com/user-attachments/assets/850ebf0f-566d-4383-8afa-6c4ff9597ccf)
+<img src="https://github.com/user-attachments/assets/d14195e3-a724-477a-b1c3-dd18418e60f7" width="500" />
+<img src="https://github.com/user-attachments/assets/850ebf0f-566d-4383-8afa-6c4ff9597ccf" width="500" />
 
 ### Железо
 ___
