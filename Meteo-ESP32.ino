@@ -32,9 +32,9 @@ IPAddress subnet(255, 255, 255, 0);
 #define TEXT_COLOR TFT_WHITE
 
 // Текст
-const char* headers[] = {"Temp:", "Hum:", "Pres:", "CO2:", "tVOC"};
+const char* headers[] = {"Temp:", "Hum:", "Pres:", "CO2:", "tVOC:"};
 // const char* values[] = {"24.4", "56", "265"};
-const uint16_t colors[] = {TFT_RED, TFT_BLUE, TFT_GREEN, TFT_PINK, TFT_ORANGE};
+const uint16_t colors[] = {TFT_RED, TFT_BLUE, TFT_GREEN, TFT_MAGENTA, TFT_ORANGE};
 
 // Пороги оповещений
 // #define CO2_ALERT_LEVEL 1400
@@ -112,10 +112,14 @@ void setup() {
   tft.setRotation(0);
   tft.fillScreen(BACKGROUND);
   tft.setTextDatum(MC_DATUM);
-  tft.setTextSize(4);
+  tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE);
-  tft.drawString("GC9A01", 120, 120);
-  delay(1000);
+  tft.drawString("Hello METEO", 120, 120);
+  tft.setTextSize(4);
+  tft.setTextColor(TFT_GOLD);
+  tft.drawString("GC9A01", 120, 150);
+  tft.drawSmoothArc(CENTER_X, CENTER_Y, 120, 110, 45, 315, TFT_BLUE, TFT_NAVY, true);
+  delay(2000);
 
   // drawStaticText();
 
@@ -125,10 +129,10 @@ void setup() {
   // bot.showTyping(true); // Показывать индикатор набора
 
   // Создание задач
-  xTaskCreatePinnedToCore(vBMETask, "BME280", 4096, NULL, 2, NULL, 0);
-  xTaskCreatePinnedToCore(vCCSTask, "CCS811", 4096, NULL, 2, NULL, 0);
-  xTaskCreatePinnedToCore(vWiFiTask, "WiFi", 4096, NULL, 1, NULL, 1);
-  xTaskCreatePinnedToCore(vDisplayTask, "Display", 8192, NULL, 3, NULL, 1);
+  xTaskCreatePinnedToCore(vBMETask, "BME280", 4096, NULL, 2, NULL, 1);
+  xTaskCreatePinnedToCore(vCCSTask, "CCS811", 4096, NULL, 2, NULL, 1);
+  xTaskCreatePinnedToCore(vWiFiTask, "WiFi", 4096, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(vDisplayTask, "Display", 8192, NULL, 2, NULL, 1);
   // xTaskCreatePinnedToCore(vBotTask, "Bot", 8192, NULL, 1, NULL, 1);
 
   i2cScan();
@@ -238,7 +242,7 @@ void vDisplayTask(void *pv) {
   
   // Координаты для элементов [Temp, Hum, Pres, CO2, tVOC]
   const int16_t xPos[] = {80, 180, 120, 80, 180};
-  const int16_t yPos[] = {60, 60, 100, 160, 160};
+  const int16_t yPos[] = {60, 60, 110, 170, 170};
 
   for(;;) {
     if(xSemaphoreTake(dataMutex, portMAX_DELAY)) {
@@ -256,7 +260,7 @@ void vDisplayTask(void *pv) {
         char tempBuff[16], humBuff[16], presBuff[16], co2Buff[16], tvocBuff[16];
         snprintf(tempBuff, sizeof(tempBuff), "%.1fC", prevData.temp);
         snprintf(humBuff, sizeof(humBuff), "%.0f%%", prevData.humi);
-        snprintf(presBuff, sizeof(presBuff), "%.1fmm", prevData.pres); // Сокращено для экономии места
+        snprintf(presBuff, sizeof(presBuff), "%.1fmmHg", prevData.pres); // Сокращено для экономии места
         snprintf(co2Buff, sizeof(co2Buff), "%dppm", prevData.eco2);
         snprintf(tvocBuff, sizeof(tvocBuff), "%dppb", prevData.tvoc);
 
@@ -268,12 +272,12 @@ void vDisplayTask(void *pv) {
           // Заголовок
           tft.setTextColor(TEXT_COLOR);
           tft.setTextSize(2);
-          tft.drawString(headers[i], xPos[i], yPos[i] - 15);
+          tft.drawString(headers[i], xPos[i], yPos[i] - 10);
           
           // Значение
           tft.setTextColor(colors[i]);
           tft.setTextSize(2);
-          tft.drawString(values[i], xPos[i], yPos[i] + 15);
+          tft.drawString(values[i], xPos[i], yPos[i] + 10);
         }
       }
       xSemaphoreGive(dataMutex);
