@@ -48,7 +48,7 @@ void ui_Screen1_screen_init(void)
     lv_arc_set_bg_angles(ui_Screen1_Arc_Hum, 270, 90);
     lv_obj_set_style_arc_width(ui_Screen1_Arc_Hum, 7, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_arc_color(ui_Screen1_Arc_Hum, lv_color_hex(0x481FDB), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_color(ui_Screen1_Arc_Hum, lv_color_hex(0x5F3DD9), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_arc_opa(ui_Screen1_Arc_Hum, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_arc_width(ui_Screen1_Arc_Hum, 10, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
@@ -105,7 +105,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_y(ui_Screen1_Label_Hum, -35);
     lv_obj_set_align(ui_Screen1_Label_Hum, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Screen1_Label_Hum, "34%");
-    lv_obj_set_style_text_color(ui_Screen1_Label_Hum, lv_color_hex(0x481FDB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_Screen1_Label_Hum, lv_color_hex(0x5F3DD9), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Screen1_Label_Hum, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Screen1_Label_Hum, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 

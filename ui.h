@@ -27,6 +27,7 @@ extern "C" {
 
 ///////////////////// SCREENS ////////////////////
 
+#include "ui_Screen3.h"
 #include "ui_Screen1.h"
 #include "ui_Screen2.h"
 
@@ -36,6 +37,9 @@ extern "C" {
 // EVENTS
 
 extern lv_obj_t * ui____initial_actions0;
+
+// IMAGES AND IMAGE SETS
+LV_IMG_DECLARE(ui_img_3_png);    // assets/3.png
 
 // UI INIT
 void ui_init(void);

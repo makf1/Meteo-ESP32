@@ -21,6 +21,7 @@ extern lv_obj_t * ui_Screen2_Chart_CO2_Yaxis2;
 extern lv_obj_t * ui_Screen2_Panel1;
 extern lv_obj_t * ui_Screen2_Label2;
 extern lv_obj_t * ui_Screen2_Label_CO2;
+extern lv_obj_t * ui_Screen2_Label4;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

@@ -13,6 +13,7 @@ lv_obj_t * ui_Screen2_Chart_CO2_Yaxis2;
 lv_obj_t * ui_Screen2_Panel1;
 lv_obj_t * ui_Screen2_Label2;
 lv_obj_t * ui_Screen2_Label_CO2;
+lv_obj_t * ui_Screen2_Label4;
 
 // event funtions
 
@@ -35,8 +36,12 @@ void ui_Screen2_screen_init(void)
                     LV_OBJ_FLAG_OVERFLOW_VISIBLE);      //make scales visible - Should it be forced to True?
     //lv_obj_remove_flag( ui_Screen2_Chart_CO2, LV_OBJ_FLAG_SCROLLABLE );    //no chart-zoom in LVGL9 - Shouldn't it be forced to False?
     lv_chart_set_type(ui_Screen2_Chart_CO2, LV_CHART_TYPE_LINE);
-    lv_chart_set_range(ui_Screen2_Chart_CO2, LV_CHART_AXIS_PRIMARY_Y, 400, 2600);
+    lv_chart_set_range(ui_Screen2_Chart_CO2, LV_CHART_AXIS_PRIMARY_Y, 400, 3000);
     lv_chart_set_div_line_count(ui_Screen2_Chart_CO2, 3, 0);
+    lv_obj_set_style_bg_color(ui_Screen2_Chart_CO2, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Screen2_Chart_CO2, 100, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_Screen2_Chart_CO2, lv_color_hex(0x3AFF00), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_Screen2_Chart_CO2, LV_GRAD_DIR_VER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Screen2_Chart_CO2_Xaxis = lv_scale_create(ui_Screen2_Chart_CO2);
     lv_scale_set_mode(ui_Screen2_Chart_CO2_Xaxis, LV_SCALE_MODE_HORIZONTAL_BOTTOM);
@@ -64,7 +69,7 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_line_width(ui_Screen2_Chart_CO2_Yaxis1, 1, LV_PART_INDICATOR);
     lv_obj_set_style_length(ui_Screen2_Chart_CO2_Yaxis1, 5, LV_PART_ITEMS);   //minor tick length
     lv_obj_set_style_length(ui_Screen2_Chart_CO2_Yaxis1, 10, LV_PART_INDICATOR);   //major tick length
-    lv_scale_set_range(ui_Screen2_Chart_CO2_Yaxis1,  400, 2600);
+    lv_scale_set_range(ui_Screen2_Chart_CO2_Yaxis1,  400, 3000);
     lv_scale_set_total_tick_count(ui_Screen2_Chart_CO2_Yaxis1, (5 > 0 ? 5 - 1 : 0) * 2 + 1);
     lv_scale_set_major_tick_every(ui_Screen2_Chart_CO2_Yaxis1, 2 >= 1 ? 2 : 1);
     lv_scale_set_label_show(ui_Screen2_Chart_CO2_Yaxis1, false);
@@ -83,17 +88,17 @@ void ui_Screen2_screen_init(void)
     lv_scale_set_major_tick_every(ui_Screen2_Chart_CO2_Yaxis2, 2 >= 1 ? 2 : 1);
     lv_scale_set_label_show(ui_Screen2_Chart_CO2_Yaxis2, false);
 
-    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Xaxis, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Xaxis, lv_color_hex(0xC0C0C0), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_line_opa(ui_Screen2_Chart_CO2_Xaxis, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis1, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis1, lv_color_hex(0xC0C0C0), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_line_opa(ui_Screen2_Chart_CO2_Yaxis1, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis2, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis2, lv_color_hex(0xC0C0C0), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_line_opa(ui_Screen2_Chart_CO2_Yaxis2, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Xaxis, lv_color_hex(0x808080), LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Xaxis, lv_color_hex(0xC0C0C0), LV_PART_ITEMS | LV_STATE_DEFAULT);
     lv_obj_set_style_line_opa(ui_Screen2_Chart_CO2_Xaxis, 0, LV_PART_ITEMS | LV_STATE_DEFAULT);
-    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis1, lv_color_hex(0x808080), LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis1, lv_color_hex(0xC0C0C0), LV_PART_ITEMS | LV_STATE_DEFAULT);
     lv_obj_set_style_line_opa(ui_Screen2_Chart_CO2_Yaxis1, 0, LV_PART_ITEMS | LV_STATE_DEFAULT);
-    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis2, lv_color_hex(0x808080), LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(ui_Screen2_Chart_CO2_Yaxis2, lv_color_hex(0xC0C0C0), LV_PART_ITEMS | LV_STATE_DEFAULT);
     lv_obj_set_style_line_opa(ui_Screen2_Chart_CO2_Yaxis2, 0, LV_PART_ITEMS | LV_STATE_DEFAULT);
 
     //This workaround (an invisible outline) is needed because without it chart overflow-visible doesn't work in LVGL-9.1
@@ -107,6 +112,8 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_y(ui_Screen2_Panel1, -110);
     lv_obj_set_align(ui_Screen2_Panel1, LV_ALIGN_CENTER);
     lv_obj_remove_flag(ui_Screen2_Panel1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_Screen2_Panel1, lv_color_hex(0x293031), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Screen2_Panel1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Screen2_Label2 = lv_label_create(ui_Screen2);
     lv_obj_set_width(ui_Screen2_Label2, LV_SIZE_CONTENT);   /// 1
@@ -120,13 +127,24 @@ void ui_Screen2_screen_init(void)
     ui_Screen2_Label_CO2 = lv_label_create(ui_Screen2);
     lv_obj_set_width(ui_Screen2_Label_CO2, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Screen2_Label_CO2, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Screen2_Label_CO2, -30);
+    lv_obj_set_x(ui_Screen2_Label_CO2, -50);
     lv_obj_set_y(ui_Screen2_Label_CO2, -65);
     lv_obj_set_align(ui_Screen2_Label_CO2, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Screen2_Label_CO2, "2321ppm");
+    lv_label_set_text(ui_Screen2_Label_CO2, "400");
     lv_obj_set_style_text_color(ui_Screen2_Label_CO2, lv_color_hex(0xDB3E1F), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Screen2_Label_CO2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Screen2_Label_CO2, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Screen2_Label4 = lv_label_create(ui_Screen2);
+    lv_obj_set_width(ui_Screen2_Label4, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Screen2_Label4, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Screen2_Label4, 5);
+    lv_obj_set_y(ui_Screen2_Label4, -65);
+    lv_obj_set_align(ui_Screen2_Label4, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Screen2_Label4, "[ppm]");
+    lv_obj_set_style_text_color(ui_Screen2_Label4, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Screen2_Label4, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Screen2_Label4, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 }
 
@@ -140,5 +158,6 @@ void ui_Screen2_screen_destroy(void)
     ui_Screen2_Panel1 = NULL;
     ui_Screen2_Label2 = NULL;
     ui_Screen2_Label_CO2 = NULL;
+    ui_Screen2_Label4 = NULL;
 
 }
