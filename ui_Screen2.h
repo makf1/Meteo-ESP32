@@ -18,10 +18,11 @@ extern lv_obj_t * ui_Screen2_Chart_CO2;
 extern lv_obj_t * ui_Screen2_Chart_CO2_Xaxis;
 extern lv_obj_t * ui_Screen2_Chart_CO2_Yaxis1;
 extern lv_obj_t * ui_Screen2_Chart_CO2_Yaxis2;
-extern lv_obj_t * ui_Screen2_Panel1;
-extern lv_obj_t * ui_Screen2_Label2;
 extern lv_obj_t * ui_Screen2_Label_CO2;
-extern lv_obj_t * ui_Screen2_Label4;
+extern lv_obj_t * ui_Screen2_Panel1;
+extern lv_obj_t * ui_Screen2_Label_Header;
+extern lv_obj_t * ui_Screen2_Label_CO2_Def;
+extern lv_obj_t * ui_Screen2_Label_Prefix_Def;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

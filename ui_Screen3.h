@@ -14,9 +14,26 @@ extern "C" {
 extern void ui_Screen3_screen_init(void);
 extern void ui_Screen3_screen_destroy(void);
 extern lv_obj_t * ui_Screen3;
-extern lv_obj_t * ui_Screen3_Spinner1;
+extern lv_obj_t * ui_Screen3_Arc_CO2;
+extern lv_obj_t * ui_Screen3_Arc_Temp;
+extern lv_obj_t * ui_Screen3_Arc_Hum;
+extern lv_obj_t * ui_Screen3_Arc_Battery;
+extern lv_obj_t * ui_Screen3_Label_Temp_Def;
+extern lv_obj_t * ui_Screen3_Label_Temp1;
+extern lv_obj_t * ui_Screen3_Label_Hum_Def;
+extern lv_obj_t * ui_Screen3_Label_CO2_Def;
+extern lv_obj_t * ui_Screen3_Label_Temp;
 extern lv_obj_t * ui_Screen3_Label1;
-extern lv_obj_t * ui_Screen3_Label2;
+extern lv_obj_t * ui_Screen3_Label_Press;
+extern lv_obj_t * ui_Screen3_Label6;
+extern lv_obj_t * ui_Screen3_Label_Hum;
+extern lv_obj_t * ui_Screen3_Label3;
+extern lv_obj_t * ui_Screen3_Label_CO2;
+extern lv_obj_t * ui_Screen3_Label4;
+extern lv_obj_t * ui_Screen3_Label_Temp_Second;
+extern lv_obj_t * ui_Screen3_Label5;
+extern lv_obj_t * ui_Screen3_Label_Hour;
+extern lv_obj_t * ui_Screen3_Label_Minute;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus
