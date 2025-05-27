@@ -10,11 +10,9 @@ lv_obj_t * ui_Screen2_Chart_CO2;
 lv_obj_t * ui_Screen2_Chart_CO2_Xaxis;
 lv_obj_t * ui_Screen2_Chart_CO2_Yaxis1;
 lv_obj_t * ui_Screen2_Chart_CO2_Yaxis2;
-lv_obj_t * ui_Screen2_Label_CO2;
 lv_obj_t * ui_Screen2_Panel1;
+lv_obj_t * ui_Screen2_Label_CO2;
 lv_obj_t * ui_Screen2_Label_Header;
-lv_obj_t * ui_Screen2_Label_CO2_Def;
-lv_obj_t * ui_Screen2_Label_Prefix_Def;
 
 // event funtions
 
@@ -35,7 +33,8 @@ void ui_Screen2_screen_init(void)
                     LV_OBJ_FLAG_OVERFLOW_VISIBLE);      //make scales visible - Should it be forced to True?
     //lv_obj_remove_flag( ui_Screen2_Chart_CO2, LV_OBJ_FLAG_SCROLLABLE );    //no chart-zoom in LVGL9 - Shouldn't it be forced to False?
     lv_chart_set_type(ui_Screen2_Chart_CO2, LV_CHART_TYPE_LINE);
-    lv_chart_set_range(ui_Screen2_Chart_CO2, LV_CHART_AXIS_PRIMARY_Y, 50, 2000);
+    lv_chart_set_range(ui_Screen2_Chart_CO2, LV_CHART_AXIS_PRIMARY_Y, 50, 2500);
+    lv_chart_set_range(ui_Screen2_Chart_CO2, LV_CHART_AXIS_SECONDARY_Y, -350, 3000);
     lv_chart_set_div_line_count(ui_Screen2_Chart_CO2, 0, 0);
     lv_obj_set_style_radius(ui_Screen2_Chart_CO2, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_Screen2_Chart_CO2, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -43,6 +42,10 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_bg_grad_color(ui_Screen2_Chart_CO2, lv_color_hex(0x3AFF00), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_Screen2_Chart_CO2, LV_GRAD_DIR_VER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_Screen2_Chart_CO2, LV_BORDER_SIDE_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_Screen2_Chart_CO2, 15, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_Screen2_Chart_CO2, 20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_Screen2_Chart_CO2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_Screen2_Chart_CO2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Screen2_Chart_CO2_Xaxis = lv_scale_create(ui_Screen2_Chart_CO2);
     lv_scale_set_mode(ui_Screen2_Chart_CO2_Xaxis, LV_SCALE_MODE_HORIZONTAL_BOTTOM);
@@ -70,7 +73,7 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_line_width(ui_Screen2_Chart_CO2_Yaxis1, 1, LV_PART_INDICATOR);
     lv_obj_set_style_length(ui_Screen2_Chart_CO2_Yaxis1, 5, LV_PART_ITEMS);   //minor tick length
     lv_obj_set_style_length(ui_Screen2_Chart_CO2_Yaxis1, 10, LV_PART_INDICATOR);   //major tick length
-    lv_scale_set_range(ui_Screen2_Chart_CO2_Yaxis1,  50, 2000);
+    lv_scale_set_range(ui_Screen2_Chart_CO2_Yaxis1,  50, 2500);
     lv_scale_set_total_tick_count(ui_Screen2_Chart_CO2_Yaxis1, (5 > 0 ? 5 - 1 : 0) * 2 + 1);
     lv_scale_set_major_tick_every(ui_Screen2_Chart_CO2_Yaxis1, 2 >= 1 ? 2 : 1);
     lv_scale_set_label_show(ui_Screen2_Chart_CO2_Yaxis1, false);
@@ -85,6 +88,7 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_line_width(ui_Screen2_Chart_CO2_Yaxis2, 1, LV_PART_INDICATOR);
     lv_obj_set_style_length(ui_Screen2_Chart_CO2_Yaxis2, 5, LV_PART_ITEMS);   //minor tick length
     lv_obj_set_style_length(ui_Screen2_Chart_CO2_Yaxis2, 10, LV_PART_INDICATOR);   //major tick length
+    lv_scale_set_range(ui_Screen2_Chart_CO2_Yaxis2,  -350, 3000);
     lv_scale_set_total_tick_count(ui_Screen2_Chart_CO2_Yaxis2, (5 > 0 ? 5 - 1 : 0) * 2 + 1);
     lv_scale_set_major_tick_every(ui_Screen2_Chart_CO2_Yaxis2, 2 >= 1 ? 2 : 1);
     lv_scale_set_label_show(ui_Screen2_Chart_CO2_Yaxis2, false);
@@ -106,16 +110,6 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_outline_pad(ui_Screen2_Chart_CO2, LV_MAX3(50, 50, 25),
                                  LV_PART_MAIN | LV_STATE_DEFAULT);   //workaround for ineffective 'overflow visible' flag
     lv_obj_set_style_outline_width(ui_Screen2_Chart_CO2, -1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_Screen2_Label_CO2 = lv_label_create(ui_Screen2_Chart_CO2);
-    lv_obj_set_width(ui_Screen2_Label_CO2, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Screen2_Label_CO2, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Screen2_Label_CO2, 0);
-    lv_obj_set_y(ui_Screen2_Label_CO2, 15);
-    lv_label_set_text(ui_Screen2_Label_CO2, "400");
-    lv_obj_set_style_text_color(ui_Screen2_Label_CO2, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Screen2_Label_CO2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Screen2_Label_CO2, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_Screen2_Panel1 = lv_obj_create(ui_Screen2);
     lv_obj_set_width(ui_Screen2_Panel1, 120);
     lv_obj_set_height(ui_Screen2_Panel1, 50);
@@ -127,6 +121,18 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_bg_color(ui_Screen2_Panel1, lv_color_hex(0x293031), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Screen2_Panel1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_Screen2_Label_CO2 = lv_label_create(ui_Screen2);
+    lv_obj_set_width(ui_Screen2_Label_CO2, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Screen2_Label_CO2, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Screen2_Label_CO2, 0);
+    lv_obj_set_y(ui_Screen2_Label_CO2, 95);
+    lv_obj_set_align(ui_Screen2_Label_CO2, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Screen2_Label_CO2, "400");
+    lv_obj_add_flag(ui_Screen2_Label_CO2, LV_OBJ_FLAG_OVERFLOW_VISIBLE);     /// Flags
+    lv_obj_set_style_text_color(ui_Screen2_Label_CO2, lv_color_hex(0xDE3C18), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Screen2_Label_CO2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Screen2_Label_CO2, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ui_Screen2_Label_Header = lv_label_create(ui_Screen2);
     lv_obj_set_width(ui_Screen2_Label_Header, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Screen2_Label_Header, LV_SIZE_CONTENT);    /// 1
@@ -134,31 +140,9 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_y(ui_Screen2_Label_Header, -100);
     lv_obj_set_align(ui_Screen2_Label_Header, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Screen2_Label_Header, "CO2");
+    lv_obj_set_style_text_color(ui_Screen2_Label_Header, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Screen2_Label_Header, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Screen2_Label_Header, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Screen2_Label_CO2_Def = lv_label_create(ui_Screen2);
-    lv_obj_set_width(ui_Screen2_Label_CO2_Def, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Screen2_Label_CO2_Def, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Screen2_Label_CO2_Def, -50);
-    lv_obj_set_y(ui_Screen2_Label_CO2_Def, -65);
-    lv_obj_set_align(ui_Screen2_Label_CO2_Def, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Screen2_Label_CO2_Def, "400");
-    lv_obj_add_flag(ui_Screen2_Label_CO2_Def, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_set_style_text_color(ui_Screen2_Label_CO2_Def, lv_color_hex(0xDB3E1F), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Screen2_Label_CO2_Def, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Screen2_Label_CO2_Def, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Screen2_Label_Prefix_Def = lv_label_create(ui_Screen2);
-    lv_obj_set_width(ui_Screen2_Label_Prefix_Def, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Screen2_Label_Prefix_Def, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Screen2_Label_Prefix_Def, 5);
-    lv_obj_set_y(ui_Screen2_Label_Prefix_Def, -65);
-    lv_obj_set_align(ui_Screen2_Label_Prefix_Def, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Screen2_Label_Prefix_Def, "[ppm]");
-    lv_obj_add_flag(ui_Screen2_Label_Prefix_Def, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_set_style_text_color(ui_Screen2_Label_Prefix_Def, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Screen2_Label_Prefix_Def, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Screen2_Label_Prefix_Def, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 }
 
@@ -169,10 +153,8 @@ void ui_Screen2_screen_destroy(void)
     // NULL screen variables
     ui_Screen2 = NULL;
     ui_Screen2_Chart_CO2 = NULL;
-    ui_Screen2_Label_CO2 = NULL;
     ui_Screen2_Panel1 = NULL;
+    ui_Screen2_Label_CO2 = NULL;
     ui_Screen2_Label_Header = NULL;
-    ui_Screen2_Label_CO2_Def = NULL;
-    ui_Screen2_Label_Prefix_Def = NULL;
 
 }

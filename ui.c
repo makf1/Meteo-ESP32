@@ -31,8 +31,8 @@ void ui_init(void)
                                                true, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
     ui_Screen0_screen_init();
+    ui_Screen1_screen_init();
     ui_Screen2_screen_init();
-    ui_Screen3_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_Screen0);
 }
@@ -40,6 +40,6 @@ void ui_init(void)
 void ui_destroy(void)
 {
     ui_Screen0_screen_destroy();
+    ui_Screen1_screen_destroy();
     ui_Screen2_screen_destroy();
-    ui_Screen3_screen_destroy();
 }

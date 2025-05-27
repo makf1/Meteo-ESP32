@@ -8,10 +8,11 @@
 - Основной
 - Экран графика CO2
 
-*Переход между основным и экраном графика CO2 производится плавным свайпом, НО пока наблюдаются фризы при переходе.*
+## Экран загрузки
+<img src="img/boot.gif" width="600" height="600">
 
-## Фото работы дисплея
-<img src="img/main.jpg" width="750" height="750"> <img src="img/co2_chart.jpg" width="750" height="750">
+## Фото экранов
+<img src="img/main.jpg" width="400" height="400"> <img src="img/co2_chart.jpg" width="400" height="400">
 
 ## Железо
 - ESP-WROM-32 (ESP32 Devkit v1);

@@ -33,11 +33,12 @@ void ui_Screen0_screen_init(void)
     lv_obj_set_style_arc_width(ui_Screen0_Spinner1, 20, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     ui_Screen0_Label1 = lv_label_create(ui_Screen0);
-    lv_obj_set_width(ui_Screen0_Label1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_width(ui_Screen0_Label1, 150);
     lv_obj_set_height(ui_Screen0_Label1, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Screen0_Label1, 0);
-    lv_obj_set_y(ui_Screen0_Label1, -70);
+    lv_obj_set_y(ui_Screen0_Label1, -75);
     lv_obj_set_align(ui_Screen0_Label1, LV_ALIGN_CENTER);
+    lv_label_set_long_mode(ui_Screen0_Label1, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_label_set_text(ui_Screen0_Label1, "Initialization system...");
     lv_obj_set_style_text_font(ui_Screen0_Label1, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
 
