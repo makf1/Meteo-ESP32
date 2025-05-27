@@ -1,2 +1,3 @@
-
-*pass.h
+# gitigore for Meteo-ESP32
+*CMakeLists.txt
+*filelist.txt

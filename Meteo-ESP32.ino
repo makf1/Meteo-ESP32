@@ -1,337 +1,227 @@
+#include <Arduino.h>
 #include <Wire.h>
-#include <WiFi.h>
+#include <TFT_eSPI.h>
+#include <lvgl.h>
+#include "ui.h"
 #include <GyverBME280.h>
 #include <SparkFunCCS811.h>
-#include <TFT_eSPI.h>
-#include <SPI.h>
-#include <pass.h>
-// #include <FastBot2.h>
 
-//============================== НАСТРОЙКИ ==================================//
-// Wi-Fi
-#define HOSTNAME "esp-meteo"
+//=============== НАСТРОЙКИ ===============
+#define I2C_SDA 21                 // Пин SDA I2C
+#define I2C_SCL 22                 // Пин SCL I2C
+#define LVGL_TICK_PERIOD 2         // Период обновления LVGL (мс)
+#define SENSOR_UPDATE_MS 1000      // Интервал опроса датчиков
+#define DISP_BUF_HEIGHT 25         // Высота буфера дисплея
+// #define DEBUG                   // Отладка
 
-// Настройка статического IP
-IPAddress staticIP(192, 168, 1, 144);
-IPAddress gateway(192, 168, 1, 1);
-IPAddress subnet(255, 255, 255, 0);
+//=============== ДОБАВЛЕННЫЕ НАСТРОЙКИ ===============
+#define LED_PIN 2                  
+#define CO2_ALARM_THRESHOLD 1500   // Порог для срабатывания сигнализации (на перспективу)
 
-// Telegram
-// #define BOT_TOKEN "x"
-// #define CHAT_ID "x"
-
-// Датчики
-#define I2C_SDA 21
-#define I2C_SCL 22
-#define CCS811_ADDR 0x5A
-
-// Настройка дисплея - цвета, координаты
-#define CENTER_X 120
-#define CENTER_Y 120
-#define BACKGROUND TFT_BLACK
-#define TEXT_COLOR TFT_WHITE
-
-// Текст
-const char* headers[] = {"Temp:", "Hum:", "Pres:", "CO2:", "tVOC:"};
-// const char* values[] = {"24.4", "56", "265"};
-const uint16_t colors[] = {TFT_RED, TFT_BLUE, TFT_GREEN, TFT_MAGENTA, TFT_ORANGE};
-
-// Пороги оповещений
-// #define CO2_ALERT_LEVEL 1400
-// #define CO2_OK_LEVEL 1200
-
-//========================= ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========================//
+//=============== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===============
+TFT_eSPI tft;
 GyverBME280 bme;
-CCS811 ccs(CCS811_ADDR);
-// FastBot2 bot;
-TFT_eSPI tft = TFT_eSPI();
+CCS811 ccs811(0x5A);
+lv_chart_series_t *co2Series = NULL;
+lv_display_t *lv_disp = nullptr;   // Указатель на дисплей LVGL
 
-struct SensorData {
-  float temp;
-  float humi;
-  float pres;
-  uint16_t eco2;
-  uint16_t tvoc;
-} sensorData;
+// Состояния приложения
+enum AppState { MAIN_SCREEN, CO2_SCREEN };
+volatile AppState currentState = MAIN_SCREEN;
 
-#define HIST_SIZE 24
-struct {
-  uint16_t co2[HIST_SIZE];
-  uint8_t idx = 0;
-} history;
+volatile bool sensorsInitialized = false;
+volatile bool ui_ready = false;    // Флаг готовности UI
 
-volatile bool co2Alert = false;
-SemaphoreHandle_t i2cMutex;
-SemaphoreHandle_t dataMutex;
+// Текущие показания
+float currentTemp = 0;
+float currentHum = 0;
+float currentPress = 0;
+uint16_t currentCO2 = 400;
+uint16_t currentTVOC = 0;
 
-// Прототипы функций
-void vBMETask(void *pv);
-void vCCSTask(void *pv);
-void vWiFiTask(void *pv);
-void vDisplayTask(void *pv);
-void vBotTask(void *pv);
-void i2cScan();
-void checkThresholds();
-String formatData();
+//=============== НАСТРОЙКИ LVGL ===============
+static lv_color_t lv_buf1[TFT_WIDTH * DISP_BUF_HEIGHT];
+static lv_color_t lv_buf2[TFT_WIDTH * DISP_BUF_HEIGHT];
 
-// Обработчик сообщений Telegram
-// void botHandler(FB_msg msg) {
-//   if (msg.text == "/sensors") {
-//     sendSensorData(msg.chatID); // Используем новую функцию
-//   }
-//   else if (msg.text == "/chart") {
-//     String chart = "📊 История CO2:\n";
-//     xSemaphoreTake(dataMutex, portMAX_DELAY); // Защита данных
-//     for (int i = 0; i < HIST_SIZE; i++) {
-//       chart += String(history.co2[i]) + " ";
-//     }
-//     xSemaphoreGive(dataMutex);
-//     bot.sendMessage(chart, msg.chatID);
-//   }
-//   else if (msg.text == "/help") {
-//     String help = "📋 Доступные команды:\n"
-//                   "/sensors - текущие данные\n"
-//                   "/chart - история CO2\n"
-//                   "/help - эта справка";
-//     bot.sendMessage(help, msg.chatID);
-//   }
-// }
+//=============== ИНИЦИАЛИЗАЦИЯ ДИСПЛЕЯ ===============
+bool initDisplay() {
+    tft.begin();
+    tft.setRotation(0);
+    tft.fillScreen(TFT_BLACK);
 
+    if (!lv_is_initialized()) {
+        lv_init();
+        lv_disp = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
+        if (!lv_disp) return false;
+        
+        lv_display_set_buffers(lv_disp, lv_buf1, lv_buf2, 
+                             sizeof(lv_buf1), 
+                             LV_DISPLAY_RENDER_MODE_PARTIAL);
+        
+        lv_display_set_flush_cb(lv_disp, [](lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
+            tft.startWrite();
+            tft.setAddrWindow(area->x1, area->y1, 
+                            area->x2 - area->x1 + 1, 
+                            area->y2 - area->y1 + 1);
+            tft.pushColors((uint16_t*)px_map, 
+                          (area->x2 - area->x1 + 1) * 
+                          (area->y2 - area->y1 + 1), 
+                          true);
+            tft.endWrite();
+            lv_display_flush_ready(disp);
+        });
+    }
+    return true;
+}
+
+//=============== НАСТРОЙКА УСТРОЙСТВА ===============
 void setup() {
-  Serial.begin(115200);
-  
-  // Инициализация I2C
-  Wire.begin(I2C_SDA, I2C_SCL);
-  // SPI.begin(TFT_SCLK, TFT_MOSI, -1, TFT_CS); // Для ESP32
-  Wire.setClock(100000);
-  i2cMutex = xSemaphoreCreateMutex();
-  dataMutex = xSemaphoreCreateMutex();
+    Serial.begin(115200);
+    Wire.begin(I2C_SDA, I2C_SCL);
+    Wire.setClock(100000);
+    pinMode(LED_PIN, OUTPUT);        
 
-  // Инициализация дисплея
-  tft.init();
-  tft.setRotation(0);
-  tft.fillScreen(BACKGROUND);
-  tft.setTextDatum(MC_DATUM);
-  tft.setTextSize(2);
-  tft.setTextColor(TFT_WHITE);
-  tft.drawString("Hello METEO", 120, 120);
-  tft.setTextSize(4);
-  tft.setTextColor(TFT_GOLD);
-  tft.drawString("GC9A01", 120, 150);
-  tft.drawSmoothArc(CENTER_X, CENTER_Y, 120, 110, 45, 315, TFT_BLUE, TFT_NAVY, true);
-  delay(2000);
-
-  // drawStaticText();
-
-  // Настройка Telegram бота
-  // bot.setToken(BOT_TOKEN);
-  // bot.attachMsg(botHandler);
-  // bot.showTyping(true); // Показывать индикатор набора
-
-  // Создание задач
-  xTaskCreatePinnedToCore(vBMETask, "BME280", 4096, NULL, 2, NULL, 1);
-  xTaskCreatePinnedToCore(vCCSTask, "CCS811", 4096, NULL, 2, NULL, 1);
-  xTaskCreatePinnedToCore(vWiFiTask, "WiFi", 4096, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(vDisplayTask, "Display", 8192, NULL, 2, NULL, 1);
-  // xTaskCreatePinnedToCore(vBotTask, "Bot", 8192, NULL, 1, NULL, 1);
-
-  i2cScan();
-}
-
-void loop() { vTaskDelete(NULL); }
-
-
-
-// Реализация задач
-void vBMETask(void *pv) {
-  if(xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(1000))) {
-    if(!bme.begin()) {
-      Serial.println("[BME] Error!");
-      vTaskDelete(NULL);
+    // Инициализация дисплея
+    if (!initDisplay()) {
+        Serial.println("[ERROR] Дисплей не инициализирован!");
+        while(1);
     }
-    xSemaphoreGive(i2cMutex);
-  }
-  
-  for(;;) {
-    if(xSemaphoreTake(i2cMutex, portMAX_DELAY)) {
-      float t = bme.readTemperature();
-      float h = bme.readHumidity();
-      float p = bme.readPressure() / 133;
 
-      Serial.print("\nBME-> Temp: "); Serial.print(String(t)); Serial.print("[C] | Hum: "); Serial.print(String(h)); Serial.print("[%] | Pres: "); Serial.print(String(p)); Serial.println("[mmHg]");
-      
-      if(xSemaphoreTake(dataMutex, portMAX_DELAY)) {
-        sensorData.temp = t;
-        sensorData.humi = h;
-        sensorData.pres = p;
-        xSemaphoreGive(dataMutex);
-      }
-      xSemaphoreGive(i2cMutex);
-    }
-    vTaskDelay(pdMS_TO_TICKS(2000));
-  }
-}
+    ui_init();
 
-void vCCSTask(void *pv) {
-  vTaskDelay(pdMS_TO_TICKS(2000));
-  
-  if(xSemaphoreTake(i2cMutex, portMAX_DELAY)) {
-    if(!ccs.begin()) {
-      Serial.print("[CCS] Error: 0x");
-      Serial.println(ccs.getErrorRegister(), HEX);
-      vTaskDelete(NULL);
-    }
-    ccs.setDriveMode(1);
-    xSemaphoreGive(i2cMutex);
-  }
-
-  for(;;) {
-    if(xSemaphoreTake(i2cMutex, portMAX_DELAY)) {
-      if(ccs.dataAvailable()) {
-        ccs.setEnvironmentalData(sensorData.humi, sensorData.temp);
-        ccs.readAlgorithmResults();
+    // Инициализация датчиков в отдельной задаче
+    xTaskCreatePinnedToCore(
+        [](void *pvParameters) {
+            bool sensorsOK = true;
         
-        if(xSemaphoreTake(dataMutex, portMAX_DELAY)) {
-          sensorData.eco2 = ccs.getCO2();
-          sensorData.tvoc = ccs.getTVOC();
+            if (!bme.begin() || !ccs811.begin()) {
+                Serial.println("[ERROR] Датчики не найдены!");
+                sensorsOK = false;
+            } else {
+                ccs811.setDriveMode(1);
+                bme.setFilter(3);
+            }
+            
+            if (sensorsOK) {
+                sensorsInitialized = true;
+                while (!ccs811.dataAvailable()) {
+                    vTaskDelay(100 / portTICK_PERIOD_MS);
+                }
+                updateSensorData();
+                ui_ready = true; // Разрешаем загрузку UI
+            }
+            vTaskDelete(NULL);
+        },
+        "SensorsInit",
+        4096,
+        NULL,
+        0,
+        NULL,
+        CONFIG_ARDUINO_RUNNING_CORE
+    );
+}
 
-          Serial.print("CCS-> CO2: "); Serial.print(String(ccs.getCO2())); Serial.print("[ppm] | tVOC: "); Serial.print(String(ccs.getTVOC())); Serial.println("[ppb]");
-          
-          history.co2[history.idx] = sensorData.eco2;
-          history.idx = (history.idx + 1) % HIST_SIZE;
-          xSemaphoreGive(dataMutex);
-          
-          // checkThresholds();
-        }
-      }
-      xSemaphoreGive(i2cMutex);
+//=============== ОСНОВНОЙ ЦИКЛ ===============
+void loop() {
+    digitalWrite(LED_PIN, LOW);
+    static uint32_t lastSensorUpdate = 0;
+    
+    lv_timer_handler();
+    lvglTick();
+
+    // Загрузка основного экрана после инициализации
+    if (ui_ready) {
+        lv_screen_load_anim(ui_Screen1, LV_SCR_LOAD_ANIM_FADE_IN, 100, 2000, true);
+        currentState = MAIN_SCREEN;
+        ui_ready = false;
     }
-    vTaskDelay(pdMS_TO_TICKS(2000));
-  }
+
+    // Обновление данных
+    if (sensorsInitialized && (millis() - lastSensorUpdate >= SENSOR_UPDATE_MS)) {
+        lastSensorUpdate = millis();
+        updateSensorData();
+        updateUI();
+    }
+    
+    handleSerialInput();
+    delay(LVGL_TICK_PERIOD);
 }
 
-void vWiFiTask(void *pv) {
-  WiFi.config(staticIP, gateway, subnet);
-  WiFi.setHostname(HOSTNAME);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
+//=============== ОБНОВЛЕНИЕ ДАННЫХ С ДАТЧИКОВ ===============
+void updateSensorData() {
+    if (!sensorsInitialized) return;
+    
+    if (ccs811.dataAvailable()) {
+        currentTemp = bme.readTemperature();
+        currentHum = bme.readHumidity();
+        currentPress = bme.readPressure() * 0.00750061683f;     // Перевод давления в мм.рт.ст
+        ccs811.readAlgorithmResults();
+        ccs811.setEnvironmentalData(currentHum, currentTemp);
+        currentCO2 = ccs811.getCO2();
+        currentTVOC = ccs811.getTVOC();
 
-  for(uint8_t i=0; i<15; i++) {
-    if(WiFi.status() == WL_CONNECTED) break;
-    Serial.print(".");
-    vTaskDelay(pdMS_TO_TICKS(500));
-  }
-
-  if(WiFi.status() == WL_CONNECTED) {
-    Serial.printf("\nWiFi OK! IP: %s\n", WiFi.localIP().toString().c_str());
-  } else {
-    Serial.println("\nWiFi FAIL!");
-  }
-
-  for(;;) {
-    if(WiFi.status() != WL_CONNECTED) WiFi.reconnect();
-    vTaskDelay(pdMS_TO_TICKS(30000));
-  }
+        #ifdef DEBUG
+           Serial.printf("[DEBUG] Temp: %.1f°C", currentTemp); 
+           Serial.printf(" Hum: %.1f%%", currentHum);  
+           Serial.printf(" Press: %.1fmmHg", currentPress);  
+           Serial.printf(" CO2: %dppm", currentCO2);  
+           Serial.printf(" TVOC: %dppb\n", currentTVOC);  
+        #endif 
+    }
 }
 
-void vDisplayTask(void *pv) {
-  tft.fillScreen(BACKGROUND);
-  tft.setTextDatum(MC_DATUM);
+//=============== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ===============
+void updateUI() {
+    if (currentState == MAIN_SCREEN) {
+        lv_label_set_text_fmt(ui_Screen1_Label_CO2, "%d", currentCO2);
+        lv_arc_set_value(ui_Screen1_Arc_CO2, currentCO2);
 
-  SensorData prevData = {0};
-  bool firstRun = true;
-  
-  // Координаты для элементов [Temp, Hum, Pres, CO2, tVOC]
-  const int16_t xPos[] = {80, 180, 120, 80, 180};
-  const int16_t yPos[] = {60, 60, 110, 170, 170};
+        lv_label_set_text_fmt(ui_Screen1_Label_Hum, "%d", (int)round(currentHum));
+        lv_arc_set_value(ui_Screen1_Arc_Hum, (int)round(currentHum));
 
-  for(;;) {
-    if(xSemaphoreTake(dataMutex, portMAX_DELAY)) {
-      bool needRedraw = firstRun || 
-        (prevData.temp != sensorData.temp) ||
-        (prevData.humi != sensorData.humi) ||
-        (prevData.pres != sensorData.pres) ||
-        (prevData.eco2 != sensorData.eco2) ||
-        (prevData.tvoc != sensorData.tvoc);
+        lv_label_set_text_fmt(ui_Screen1_Label_Temp, "%.1f", currentTemp);
+        lv_arc_set_value(ui_Screen1_Arc_Temp, currentTemp);
 
-      if(needRedraw) {
-        prevData = sensorData;
-        firstRun = false;
+        lv_label_set_text_fmt(ui_Screen1_Label_TVOC, "%d", currentTVOC);
+        lv_label_set_text_fmt(ui_Screen1_Label_Press, "%d", (int)round(currentPress));
 
-        char tempBuff[16], humBuff[16], presBuff[16], co2Buff[16], tvocBuff[16];
-        snprintf(tempBuff, sizeof(tempBuff), "%.1fC", prevData.temp);
-        snprintf(humBuff, sizeof(humBuff), "%.0f%%", prevData.humi);
-        snprintf(presBuff, sizeof(presBuff), "%.1fmmHg", prevData.pres); // Сокращено для экономии места
-        snprintf(co2Buff, sizeof(co2Buff), "%dppm", prevData.eco2);
-        snprintf(tvocBuff, sizeof(tvocBuff), "%dppb", prevData.tvoc);
-
-        const char* values[] = {tempBuff, humBuff, presBuff, co2Buff, tvocBuff};
-
-        tft.fillScreen(BACKGROUND);
+    } else {
+        if (!co2Series) {
+            co2Series = lv_chart_add_series(ui_Screen2_Chart_CO2, 
+                lv_color_hex(0xa9a9a9), LV_CHART_AXIS_PRIMARY_Y);
+            lv_chart_set_point_count(ui_Screen2_Chart_CO2, 10);
+            lv_chart_set_update_mode(ui_Screen2_Chart_CO2, LV_CHART_UPDATE_MODE_SHIFT);
+        }
         
-        for(uint8_t i=0; i<5; i++) {
-          // Заголовок
-          tft.setTextColor(TEXT_COLOR);
-          tft.setTextSize(2);
-          tft.drawString(headers[i], xPos[i], yPos[i] - 10);
-          
-          // Значение
-          tft.setTextColor(colors[i]);
-          tft.setTextSize(2);
-          tft.drawString(values[i], xPos[i], yPos[i] + 10);
-        }
-      }
-      xSemaphoreGive(dataMutex);
+        lv_label_set_text_fmt(ui_Screen2_Label_CO2, "%d", currentCO2);
+        
+        // Ограничение для графика CO2
+        if (currentCO2 >= 2250) currentCO2 = 2250;
+        lv_chart_set_next_value(ui_Screen2_Chart_CO2, co2Series, currentCO2);
     }
-    vTaskDelay(pdMS_TO_TICKS(1000));
-  }
 }
 
-// // Новая функция для отправки данных
-// void sendSensorData(const String& chatID) {
-//   xSemaphoreTake(dataMutex, portMAX_DELAY);
-//   String msg = "🌡️ Температура: " + String(sensorData.temp,1) + "°C\n";
-//   msg += "💧 Вологість: " + String(sensorData.humi,1) + "%\n";
-//   msg += "🔄 Тиск: " + String(sensorData.pres,1) + " мм.рт.ст.\n";
-//   msg += "🌫️ CO₂: " + String(sensorData.eco2) + " ppm\n";
-//   msg += "🧪 ЛОС: " + String(sensorData.tvoc) + " ppb";
-//   xSemaphoreGive(dataMutex);
-  
-//   bot.sendMessage(msg, chatID);
-// }
-
-// void vBotTask(void *pv) {
-//   for(;;) {
-//     bot.tick();
-//     vTaskDelay(100 / portTICK_PERIOD_MS);
-//   }
-// }
-
-// // Вспомогательные функции
-// void checkThresholds() {
-//   if(sensorData.eco2 > CO2_ALERT_LEVEL && !co2Alert) {
-//     bot.sendMessage("⚠️ CO2 Alert: " + String(sensorData.eco2) + "ppm", CHAT_ID);
-//     co2Alert = true;
-//   }
-//   else if(sensorData.eco2 < CO2_OK_LEVEL && co2Alert) {
-//     co2Alert = false;
-//   }
-// }
-
-// String formatData() {
-//   String msg = "🌡️ Temp: " + String(sensorData.temp,1) + "C\n";
-//   msg += "💧 Hum: " + String(sensorData.humi,1) + "%\n";
-//   msg += "🔄 Pres: " + String(sensorData.pres,1) + "mmHg\n";
-//   msg += "🌫️ CO2: " + String(sensorData.eco2) + "ppm\n";
-//   msg += "🧪 TVOC: " + String(sensorData.tvoc) + "ppb";
-//   return msg;
-// }
-
-void i2cScan() {
-  Serial.println("\n I2C Scanner:");
-  for(uint8_t addr=1; addr<127; addr++) {
-    Wire.beginTransmission(addr);
-    if(Wire.endTransmission() == 0) {
-      Serial.printf("Found: 0x%02X\n", addr);
+//=============== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИИ ===============
+void lvglTick() {
+    static uint32_t lastTick = 0;
+    if (millis() - lastTick >= LVGL_TICK_PERIOD) {
+        lv_tick_inc(LVGL_TICK_PERIOD);
+        lastTick = millis();
     }
-  }
+}
+
+//=============== ОБРАБОТКА КОМАНД ===============
+void handleSerialInput() {
+    if (Serial.available()) {
+        String input = Serial.readStringUntil('\n');
+        input.trim();
+        
+        if (input.equalsIgnoreCase("graph")) {
+            currentState = CO2_SCREEN;
+            lv_screen_load_anim(ui_Screen2, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
+        } else if (input.equalsIgnoreCase("main")) {
+            currentState = MAIN_SCREEN;
+            lv_screen_load_anim(ui_Screen1, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
+        }
+    }
 }
